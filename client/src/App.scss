@@ -1,0 +1,32 @@
+@import "bootstrap";
+@import "bootstrap-icons";
+
+.fc {
+  font-size: 1em;
+
+  // Kludge to get custom styling with CSS variables inside .fc-event.
+  .fc-event-flexcontainer {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    border-width: 0.2em 0;
+    border-style: solid;
+    // Injected in JS to style the event based on the calendar it comes from.
+    border-color: var(--fc-user-color);
+
+    .fc-event-details {
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      column-gap: $spacer;
+    }
+
+    .fc-event-title {
+      width: 100%;
+      white-space: normal;
+      overflow-wrap: break-word;
+      align-self: flex-end;
+    }
+  }
+}
