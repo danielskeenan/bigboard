@@ -8,3 +8,14 @@ services:
       APP_SECRET: ${APP_SECRET}
 #      MERCURE_PUBLISHER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET}
 #      MERCURE_SUBSCRIBER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET}
+  
+  client:
+    image: ${IMAGES_PREFIX:-}app-client
+    build:
+      context: client
+      target: web_client
+    restart: unless-stopped
+    ports:
+      - target: 80
+        published: 8080
+        protocol: tcp
