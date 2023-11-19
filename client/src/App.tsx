@@ -11,10 +11,12 @@ import {
   JsonRequestError,
   ToolbarInput,
 } from "@fullcalendar/core";
-import crc32 from 'crc/crc32';
-import convert from 'color-convert';
-import {Alert} from "react-bootstrap";
+import {Alert, Button, Spinner} from "react-bootstrap";
 import {zipObject} from "lodash";
+import {createPortal} from "react-dom";
+import ConfigureDialog from "./ConfigureDialog.tsx";
+import {CheckLg, Gear} from "react-bootstrap-icons";
+import calcStringColor from "./calcStringColor.ts";
 
 const SERVER_BASE_URL = new URL(`http://${(new URL(document.URL)).hostname}:8000/parse`);
 
@@ -40,22 +42,12 @@ export default function App() {
       });
       url.search = urlParams.toString();
 
-      // Hash the ID to determine background color. Borrowed from sACNView's algorithm.
-      const goldenRatio = 0.618033988749895;
-      const idHash = crc32(id);
-      const hue = (goldenRatio * idHash) % 1.0;
-      const sat = ((goldenRatio * idHash * 2) % 0.25) + 0.75;
-      const light = 0.5;
-      const color = convert.hsl.hex([hue * 100, sat * 100, light * 100]);
-
       sources.push({
         id: id,
         url: url.toString(),
         format: 'json',
-        backgroundColor: `#${color}`,
+        backgroundColor: calcStringColor(id),
       });
-
-      // Initialize the source errors.
     }
 
     return sources;
@@ -64,20 +56,23 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   /** Keyed by event source url */
   const [errorMessages, setErrorMessages] = useState<SourceErrors>(new Map(eventSources.map(source => [source.url as string, null])));
+  const [configureVisible, setConfigureVisible] = useState(false);
+  const showConfigure = useCallback(() => setConfigureVisible(true), [setConfigureVisible]);
+  const refetchEvents = useCallback(() => {
+    if (!isLoading) {
+      const calendarApi = calendarRef.current?.getApi();
+      calendarApi?.refetchEvents();
+    }
+  }, [isLoading, calendarRef]);
 
   // Auto-refresh timer.
   useEffect(() => {
-    const timerId = setInterval(() => {
-      if (!isLoading) {
-        const calendarApi = calendarRef.current?.getApi();
-        calendarApi?.refetchEvents();
-      }
-    }, refreshInterval);
+    const timerId = setInterval(refetchEvents, refreshInterval);
 
     return () => {
       clearInterval(timerId);
     };
-  }, [isLoading, refreshInterval]);
+  }, [refetchEvents, refreshInterval]);
 
   // Configure top bar to display only the month name in the center.
   const headerToolbar: ToolbarInput = {
@@ -97,9 +92,7 @@ export default function App() {
 
     // Calculate the first day of the first week of the desired month.
     const now = new Date();
-    const firstOfMonth = new Date(now.getFullYear(), now.getMonth() + monthOffset);
-
-    return firstOfMonth;
+    return new Date(now.getFullYear(), now.getMonth() + monthOffset);
   }, []);
 
   // Custom event display: Show calendar source id (i.e. user's initials), event time, event title.
@@ -144,6 +137,11 @@ export default function App() {
     }
   }, [errorMessages, setErrorMessages]);
 
+  // Configure dialog cancel callback.
+  const onConfigureCancel = useCallback(() => {
+    setConfigureVisible(false);
+  }, [setConfigureVisible]);
+
   const errorMessageCount = useMemo(() => {
     let count = 0;
     for (const message of errorMessages.values()) {
@@ -169,15 +167,26 @@ export default function App() {
         eventSourceFailure={errorHandler}
         eventSourceSuccess={successHandler}
       />
-      {errorMessageCount === 0 && isLoading && (
-        <Alert variant="success">Loading...</Alert>
-      )}
-      {errorMessageCount === 0 && !isLoading && (
-        <Alert variant="success">Up to date</Alert>
-      )}
-      {errorMessageCount > 0 && (
-        <Alert variant="danger"><ErrorList calender={calendarRef.current?.getApi()} errors={errorMessages}/></Alert>
-      )}
+      <div className="footer">
+        {errorMessageCount === 0 && (
+          <>
+            <Button variant="secondary" onClick={showConfigure}><Gear title="Settings"/></Button>
+            <Button variant="outline-success" disabled={calendarRef === null || isLoading} onClick={refetchEvents}>
+              {isLoading && <Spinner as="span" animation="border" role="status" size="sm" title="Loading"/>}
+              {!isLoading && <CheckLg title="Up to date" role="status"/>}
+            </Button>
+          </>
+        )}
+        {errorMessageCount > 0 && (
+          <Alert variant="danger"><ErrorList calender={calendarRef.current?.getApi()} errors={errorMessages}/></Alert>
+        )}
+      </div>
+      {createPortal(
+        <ConfigureDialog
+          visible={configureVisible}
+          eventSources={eventSources}
+          onCancel={onConfigureCancel}
+        />, document.body)}
     </div>
   );
 }
