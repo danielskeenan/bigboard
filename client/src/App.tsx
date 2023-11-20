@@ -12,11 +12,10 @@ import {
   ToolbarInput,
 } from "@fullcalendar/core";
 import {Alert, Button, Spinner} from "react-bootstrap";
-import {zipObject} from "lodash";
+import {zip} from "lodash";
 import {createPortal} from "react-dom";
 import ConfigureDialog from "./ConfigureDialog.tsx";
 import {CheckLg, Gear} from "react-bootstrap-icons";
-import calcStringColor from "./calcStringColor.ts";
 
 const SERVER_BASE_URL = new URL(`http://${(new URL(document.URL)).hostname}:8000/parse`);
 
@@ -32,9 +31,9 @@ export default function App() {
   // Load sources and calculate their properties.
   const eventSources: EventSourceInput = useMemo(() => {
     const urlParams = (new URL(document.URL)).searchParams;
-    const icsFiles: Record<string, string> = zipObject(urlParams.getAll('id'), urlParams.getAll('ics'));
+    const icsFiles = zip(urlParams.getAll('id'), urlParams.getAll('ics'), urlParams.getAll('color')) as string[][];
     const sources: EventSourceInput = [];
-    for (const [id, ics] of Object.entries(icsFiles)) {
+    for (const [id, ics, color] of icsFiles) {
       // Build the URL to request calendar events from.
       const url = new URL(SERVER_BASE_URL);
       const urlParams = new URLSearchParams({
@@ -46,7 +45,7 @@ export default function App() {
         id: id,
         url: url.toString(),
         format: 'json',
-        backgroundColor: calcStringColor(id),
+        backgroundColor: color,
       });
     }
 

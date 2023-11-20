@@ -2,13 +2,13 @@ import {Button, Form, Modal, Table} from "react-bootstrap";
 import {useCallback, useId, useMemo, useState} from "react";
 import {cloneDeep, isEqual} from "lodash";
 import {EventInput} from "@fullcalendar/core";
-import {CircleFill, PlusLg, XLg} from "react-bootstrap-icons";
-import calcStringColor from "./calcStringColor.ts";
+import {PlusLg, XLg} from "react-bootstrap-icons";
 
-type ConfigureSource = Pick<EventInput, "id" | "url">;
+type ConfigureSource = Pick<EventInput, "id" | "url" | "backgroundColor">;
 const defaultSource: ConfigureSource = {
   id: '',
   url: '',
+  backgroundColor: '',
 };
 
 interface ConfigureDialogProps {
@@ -44,6 +44,7 @@ export default function ConfigureDialog(props: ConfigureDialogProps) {
       const configureSource = {
         id: source.id as string,
         url: sourceUrl.searchParams.get('source') as string,
+        backgroundColor: source.backgroundColor,
       };
       cloned.push(configureSource);
     }
@@ -79,6 +80,7 @@ export default function ConfigureDialog(props: ConfigureDialogProps) {
     }
     newSearchParams.append('id', source.id as string);
     newSearchParams.append('ics', source.url as string);
+    newSearchParams.append('color', source.backgroundColor as string);
   }
   newUrl.search = newSearchParams.toString();
 
@@ -113,6 +115,8 @@ export default function ConfigureDialog(props: ConfigureDialogProps) {
               {sources.map((source, ix) =>
                 <EventSourceRow
                   key={ix}
+                  color={source.backgroundColor as string}
+                  setColor={newColor => updateSource(ix, 'backgroundColor', newColor)}
                   id={source.id as string}
                   setId={newId => updateSource(ix, 'id', newId)}
                   url={source.url as string}
@@ -139,6 +143,8 @@ export default function ConfigureDialog(props: ConfigureDialogProps) {
 }
 
 interface EventSourceRowProps {
+  color: string;
+  setColor: (newColor: string) => void;
   id: string;
   setId: (newId: string) => void;
   url: string;
@@ -147,14 +153,14 @@ interface EventSourceRowProps {
 }
 
 function EventSourceRow(props: EventSourceRowProps) {
-  const {setId, setUrl} = props;
+  const {setColor, setId, setUrl} = props;
 
   const id = useId();
 
   return (
     <tr>
       <td>
-        <CircleFill size={24} color={calcStringColor(props.id as string)}/>
+        <Form.Control id={`${id}=color`} type="color" value={props.color} onChange={e => setColor(e.target.value)}/>
       </td>
       <td>
         <Form.Control id={`${id}-id`} type="text" htmlSize={5} spellCheck={false} value={props.id}
