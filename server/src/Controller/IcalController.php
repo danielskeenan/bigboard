@@ -27,13 +27,23 @@ class IcalController extends AbstractController
 
         $events = [];
         foreach ($cal->VEVENT as $event) {
+            /** @var \DateTime $start */
+            $start = $event->DTSTART->getDateTime();
+            /** @var \DateTime $end */
+            $end = $event->DTEND->getDateTime();
+            $allDay = count($event->select('X-MICROSOFT-CDO-ALLDAYEVENT')) > 0 && $event->select('X-MICROSOFT-CDO-ALLDAYEVENT')[0]->getValue() == 'TRUE';
+            if ($allDay) {
+                $start = $start->modify('+1 days');
+                $end = $end->modify('+1 days');
+            }
+
             $events[] = [
                 'id' => $event->UID->getValue(),
                 'title' => $event->SUMMARY->getValue(),
                 'location' => $event->LOCATION->getValue(),
-                'start' => $event->DTSTART->getDateTime()->format('c'),
-                'end' => $event->DTEND->getDateTime()->format('c'),
-                'allDay' => (count($event->select('X-MICROSOFT-CDO-ALLDAYEVENT')) > 0 && $event->select('X-MICROSOFT-CDO-ALLDAYEVENT')[0]->getValue() == 'TRUE'),
+                'start' => $start->format('c'),
+                'end' => $end->format('c'),
+                'allDay' => $allDay,
             ];
         }
 
