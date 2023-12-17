@@ -73,6 +73,18 @@ export default function App() {
     };
   }, [refetchEvents, refreshInterval]);
 
+  // Reload page at 12:01 am daily. The calendar library does strange things when it is kept visible across day boundaries.
+  useEffect(() => {
+    const now = new Date();
+    const reloadAt = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 1, 0, 0);
+    const timeUntilReload = reloadAt.getTime() - now.getTime();
+    const timerId = setTimeout(() => location.reload(), timeUntilReload);
+
+    return () => {
+      clearTimeout(timerId);
+    };
+  }, []);
+
   // Configure top bar to display only the month name in the center.
   const headerToolbar: ToolbarInput = {
     start: '',
