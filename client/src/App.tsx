@@ -116,6 +116,7 @@ export default function App() {
     // .fc-event-flexcontainer is a kludge to get custom styling with CSS variables inside .fc-event.
     return (
       <div className="fc-event-flexcontainer" style={styles}>
+        <div className="fc-event-uid">{eventArgs.event.id}</div>
         <div className="fc-event-details">
           <div className="fc-event-id">{eventArgs.event.source?.id}</div>
           <div className="fc-event-time">{eventArgs.timeText}</div>
