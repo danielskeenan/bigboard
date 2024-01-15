@@ -39,8 +39,8 @@ class IcalController extends AbstractController
 
             $events[] = [
                 'id' => $event->UID->getValue(),
-                'title' => $event->SUMMARY->getValue(),
-                'location' => $event->LOCATION->getValue(),
+                'title' => $event->SUMMARY ? $event->SUMMARY->getValue() : "Untitled Event",
+                'location' => $event->LOCATION?->getValue(),
                 'start' => $start->format('c'),
                 'end' => $end->format('c'),
                 'allDay' => $allDay,
