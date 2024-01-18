@@ -27,6 +27,11 @@ class IcalController extends AbstractController
 
         $events = [];
         foreach ($cal->VEVENT as $event) {
+            $title = $event->SUMMARY ? $event->SUMMARY->getValue() : "Untitled Event";
+            if ($title === 'Private Appointment') {
+                continue;
+            }
+
             /** @var \DateTime $start */
             $start = $event->DTSTART->getDateTime();
             /** @var \DateTime $end */
@@ -39,7 +44,7 @@ class IcalController extends AbstractController
 
             $events[] = [
                 'id' => $event->UID->getValue(),
-                'title' => $event->SUMMARY ? $event->SUMMARY->getValue() : "Untitled Event",
+                'title' => $title,
                 'location' => $event->LOCATION?->getValue(),
                 'start' => $start->format('c'),
                 'end' => $end->format('c'),
