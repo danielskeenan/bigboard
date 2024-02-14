@@ -1,9 +1,13 @@
 #! /usr/bin/env bash
 
 launched=0
-launch() {
+start_backend() {
 	docker compose -f compose.yaml -f compose.prod.yaml -p bigboard up --build --wait --force-recreate --detach
 	launched=$?
+}
+
+start_frontend() {
+	firefox --kiosk http://localhost:8080
 }
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
@@ -20,9 +24,11 @@ git rebase origin/main
 #    fi
 #done
 
-launch
+start_backend
 echo "If you get \"error during connect: this error may indicate that the docker daemon is not running\", ensure Docker \
 Desktop is started."
 echo "If all containers are healthy, open http://localhost:8080. Otherwise, fix errors."
 echo "Press any key to close the launcher. Server will remain running in the background."
-read -r -s -n 1
+#read -r -s -n 1
+
+start_frontend
