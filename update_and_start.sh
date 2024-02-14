@@ -7,7 +7,7 @@ start_backend() {
 }
 
 start_frontend() {
-	firefox --kiosk http://localhost:8080
+	firefox --kiosk $(cat url.txt)
 }
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
